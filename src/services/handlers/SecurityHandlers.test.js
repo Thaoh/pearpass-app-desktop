@@ -245,7 +245,24 @@ describe('SecurityHandlers', () => {
       expect(result).toBe('handshake-result')
     })
 
-    it('throws if the presented client key is not a confirmed pairing', async () => {
+    it('calls beginHandshake with a pending client key from pairing', async () => {
+      appIdentity.getPairedClients.mockResolvedValue([
+        { publicKey: 'vivaldiPub', pairingState: 'PENDING' }
+      ])
+      sessionManager.beginHandshake.mockResolvedValue('handshake-result')
+      const result = await handlers.nmBeginHandshake({
+        extEphemeralPubB64: 'abc',
+        clientEd25519PublicKeyB64: 'vivaldiPub'
+      })
+      expect(sessionManager.beginHandshake).toHaveBeenCalledWith(
+        client,
+        'abc',
+        'vivaldiPub'
+      )
+      expect(result).toBe('handshake-result')
+    })
+
+    it('throws if the presented client key is not registered', async () => {
       appIdentity.getPairedClients.mockResolvedValue([
         { publicKey: 'chromePub', pairingState: 'CONFIRMED' }
       ])

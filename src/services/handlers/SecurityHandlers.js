@@ -151,12 +151,15 @@ export class SecurityHandlers {
     let clientPubB64 = clientEd25519PublicKeyB64
     if (clientPubB64) {
       const clients = await getPairedClients(this.client)
-      const confirmed = clients.find(
+      // PENDING is the pairing window after getIdentity. Login needs a
+      // session before confirmPair, so handshake cannot wait for CONFIRMED.
+      const registered = clients.find(
         (entry) =>
           entry.publicKey === clientPubB64 &&
-          entry.pairingState === PAIRING_STATES.CONFIRMED
+          (entry.pairingState === PAIRING_STATES.CONFIRMED ||
+            entry.pairingState === PAIRING_STATES.PENDING)
       )
-      if (!confirmed) {
+      if (!registered) {
         throw new Error(
           createErrorWithCode(
             SecurityErrorCodes.CLIENT_NOT_PAIRED,
